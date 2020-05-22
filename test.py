@@ -3,13 +3,16 @@
 #Install flask (web apps), requests and beautifulsoup4 (web scraping) in the terminal using pip
 #https://github.com/gmarmstrong/python-datamuse/ Repo for similar word search
 
-#Imports
+#region Imports
 import requests
 from bs4 import BeautifulSoup
 import urllib
 import re
+import json
+import csv
+#endregion
 
-#Pun web scraping
+#region Pun web scraping
 pun_links = []
 URL = 'https://punpedia.org/'
 site = requests.get(URL)      #Import category page
@@ -28,33 +31,16 @@ pun_repo = {} #Create pun list
 for link in pun_links:
     page = requests.get(link)      #Import page from pun links list
     soup = BeautifulSoup(page.text,'html.parser') #Parse with BeautifulSoup
-    #print(soup.prettify()) #View page content to determine what to scrape
+    #print(soup.prettify ()) #View page content to determine what to scrape
     category = link.replace("https://punpedia.org/","").replace("-puns/","")
-    pun_repo[category]={}  #Establish category as nested dictionary
+    pun_repo[category]=[]  #Establish category as list
     i=0
     for ultag in soup.findAll('ul')[1:]:      #Iterate through unstructured list, skipping initial paragraph
         for litag in ultag.findAll('li'):     #Iterate through all lines in unstructred list
-            if "Here are related puns" in litag.text: #Ignore a few intro lines that aren't actually puns
-                pass
-            elif "Here are some puns" in litag.text: #Ignore a few intro lines that aren't actually puns
-                pass
-            elif "ve included" in litag.text: #Ignore a few intro lines that aren't actually puns
-                pass
-            elif "ve got some" in litag.text: #Ignore a few intro lines that aren't actually puns
-                pass
-            else:
-                pun_repo[category][i]= {litag.text.replace(u'\xa0', u' ')}
-                i=i+1
+            pun_repo[category].append(litag.text.replace(u'\xa0', u' ').replace(u'\n', u' '))
 
-print(pun_repo)
-
-#Web interface
-# app = Flask(__name__)
-#
-# @app.route("/<name>")
-# def hello_name(name):
-#     return "Hello" + name
-#
-# if __name__=="__main__":
-#     app.run(debug=True)
-
+#Create json
+#pun_repo_saved = json.dumps(pun_repo, default=set_default)
+with open('pun_dict.json', 'w') as outfile:
+    json.dump(pun_repo, outfile)
+#endregion
